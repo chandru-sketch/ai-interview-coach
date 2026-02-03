@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Feedback</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f0f7ff, #dceeff);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Header with Home icon */
+        .header {
+            width: 100%;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .home-icon {
+            color: #4e9af1;
+            text-decoration: none;
+            transition: color 0.3s, transform 0.2s;
+        }
+
+        .home-icon:hover {
+            color: #367bd1;
+            transform: scale(1.2);
+        }
+
+        .feedback-container {
+            max-width: 600px;
+            width: 100%;
+            background: #fff;
+            margin: 40px auto;
+            padding: 30px 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(78, 154, 241, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feedback-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 14px 40px rgba(78, 154, 241, 0.2);
+        }
+
+        h2 {
+            color: #4e9af1;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        form input, form textarea {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 18px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        form textarea {
+            resize: none; /* Disable textarea resizing */
+        }
+
+        form input:focus, form textarea:focus {
+            border-color: #4e9af1;
+            box-shadow: 0 0 10px rgba(78, 154, 241, 0.2);
+            outline: none;
+        }
+
+        form button {
+            background-color: #4e9af1;
+            color: #fff;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        form button:hover {
+            background-color: #367bd1;
+            transform: scale(1.05);
+        }
+
+        .thankyou {
+            text-align: center;
+            color: #2a4d7a;
+            font-size: 1.2rem;
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header with Home icon -->
+    <div class="header">
+        <a href="{% url 'home' %}" class="home-icon" title="Go to Home">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="28" height="28">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-6 0h6"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Feedback form card -->
+    <div class="feedback-container">
+        {% if submitted %}
+            <div class="thankyou">
+                <h2>Thank you for your feedback!</h2>
+                <p>We appreciate your input and will review it shortly.</p>
+            </div>
+        {% else %}
+            <h2>Submit Your Feedback</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit">Submit Feedback</button>
+            </form>
+        {% endif %}
+    </div>
+
+</body>
+</html>

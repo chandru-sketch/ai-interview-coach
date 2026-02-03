@@ -1,0 +1,597 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-auth">
+  <div class="auth-card" id="authCard">
+    <div class="auth-panel auth-panel-left" id="panelLeft">
+      <div class="yeti-anim">
+        <div class="yeti-img-wrap">
+          <img id="yeti-face" src="/static/yeti_open.png" alt="Yeti" class="yeti-face-img">
+          <img id="yeti-face-closed" src="/static/yeti_closed.png" alt="Yeti Closed" class="yeti-face-img" style="display:none;">
+        </div>
+      </div>
+      <div class="panel-content panel-alt">
+        <h2 id="welcomeTitle">Hello, Welcome!</h2>
+        <p id="welcomeText">Don't have an account?</p>
+        <button class="panel-btn" id="showRegister">Register</button>
+      </div>
+    </div>
+    <div class="auth-panel auth-panel-right" id="panelRight">
+      <div class="panel-content">
+        <h2 id="loginTitle" style="color:#222;font-size:2.2rem;font-weight:800;margin-bottom:18px;text-align:left;">Login</h2>
+        <form method="post" class="auth-form" id="loginForm">
+          {% csrf_token %}
+          <div class="input-group">
+            <input type="text" name="username" id="email-input" required placeholder="Username" autocomplete="username">
+            <span class="input-icon"><i class="fa fa-user"></i></span>
+          </div>
+          <div class="input-group">
+            <input type="password" name="password" id="password-input" required placeholder="Password" autocomplete="current-password">
+            <span class="input-icon"><i class="fa fa-lock"></i></span>
+          </div>
+          <div class="show-label" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:-10px;">
+            <input type="checkbox" id="show-password" style="margin:0;"> <span>Show Password</span>
+          </div>
+          </div>
+          <div class="forgot-row" style="text-align:right;margin-bottom:10px;">
+            <a href="#" class="forgot-link" id="forgotPasswordBtn">Forgot Password?</a>
+          </div>
+          <button type="submit" class="btn-primary">Login</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div id="forgotModal" class="modal-overlay" style="display:none;">
+  <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="fp-title">
+    <span class="close-modal" id="closeModal" tabindex="0" aria-label="Close">&times;</span>
+    <h3 id="fp-title" style="margin-bottom:10px;"><i class="fa fa-lock"></i> Forgot Password</h3>
+    <div id="step1">
+      <p>Enter your username or email:</p>
+      <input type="text" id="fp-username" placeholder="Username or Email" class="fp-input">
+      <div id="fpUserError" style="color:#e53e3e;font-size:0.98rem;margin-bottom:8px;display:none;">Please enter a valid username or email.</div>
+      <button class="btn-primary" id="generateCodeBtn" style="width:100%;"><span id="genCodeText">Generate Code</span><span id="genCodeLoading" style="display:none;"><i class="fa fa-spinner fa-spin"></i></span></button>
+    </div>
+    <div id="step2" style="display:none;">
+      <p>Enter the 4-digit code sent to you:</p>
+      <input type="text" id="fp-code" maxlength="4" placeholder="Enter code" class="fp-input fp-code-input">
+      <button class="btn-primary" id="verifyCodeBtn" style="width:100%;"><span id="verifyCodeText">Verify Code</span><span id="verifyCodeLoading" style="display:none;"><i class="fa fa-spinner fa-spin"></i></span></button>
+      <div id="codeError" style="color:#e53e3e;font-size:0.98rem;margin-top:6px;display:none;">Incorrect code. Try again.</div>
+    </div>
+    <div id="step3" style="display:none;">
+      <p>Set your new password:</p>
+      <input type="password" id="fp-new-password" placeholder="New Password (min 6 chars)" class="fp-input">
+      <input type="password" id="fp-confirm-password" placeholder="Confirm Password" class="fp-input">
+      <button class="btn-primary" id="resetPasswordBtn" style="width:100%;"><span id="resetPwText">Reset Password</span><span id="resetPwLoading" style="display:none;"><i class="fa fa-spinner fa-spin"></i></span></button>
+      <div id="pwError" style="color:#e53e3e;font-size:0.98rem;margin-top:6px;display:none;">Passwords do not match or are too weak.</div>
+      <div id="pwSuccess" style="color:#38a169;font-size:0.98rem;margin-top:6px;display:none;">Password reset successful!</div>
+    </div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="/static/yeti_login_anim.js"></script>
+<script>
+document.getElementById('showRegister').addEventListener('click', function() {
+  // Animate to register panel (smooth transition)
+  const panelLeft = document.getElementById('panelLeft');
+  const panelRight = document.getElementById('panelRight');
+  panelLeft.classList.add('slide-left');
+  panelRight.classList.add('slide-right');
+  document.getElementById('welcomeTitle').textContent = 'Registration';
+  document.getElementById('welcomeText').textContent = "Create your account";
+  setTimeout(function() { window.location.href = '/register'; }, 700);
+});
+document.getElementById('show-password').addEventListener('change', function() {
+  const pw = document.getElementById('password-input');
+  pw.type = this.checked ? 'text' : 'password';
+});
+
+// Forgot Password Modal Logic (AJAX)
+const forgotBtn = document.getElementById('forgotPasswordBtn');
+const modal = document.getElementById('forgotModal');
+const closeModal = document.getElementById('closeModal');
+const step1 = document.getElementById('step1');
+const step2 = document.getElementById('step2');
+const step3 = document.getElementById('step3');
+const generateCodeBtn = document.getElementById('generateCodeBtn');
+const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+const codeError = document.getElementById('codeError');
+const pwError = document.getElementById('pwError');
+const pwSuccess = document.getElementById('pwSuccess');
+const fpUserError = document.getElementById('fpUserError');
+const genCodeText = document.getElementById('genCodeText');
+const genCodeLoading = document.getElementById('genCodeLoading');
+const verifyCodeText = document.getElementById('verifyCodeText');
+const verifyCodeLoading = document.getElementById('verifyCodeLoading');
+const resetPwText = document.getElementById('resetPwText');
+const resetPwLoading = document.getElementById('resetPwLoading');
+
+// Add code display bar
+let codeBar = document.getElementById('codeBar');
+if (!codeBar) {
+  codeBar = document.createElement('div');
+  codeBar.id = 'codeBar';
+  codeBar.style.display = 'none';
+  codeBar.style.position = 'fixed';
+  codeBar.style.top = '0';
+  codeBar.style.left = '50%';
+  codeBar.style.transform = 'translateX(-50%)';
+  codeBar.style.background = '#2563eb';
+  codeBar.style.color = '#fff';
+  codeBar.style.fontSize = '1.25rem';
+  codeBar.style.fontWeight = '700';
+  codeBar.style.padding = '12px 32px';
+  codeBar.style.borderRadius = '0 0 16px 16px';
+  codeBar.style.zIndex = '10001';
+  codeBar.style.boxShadow = '0 2px 8px rgba(78,154,241,0.13)';
+  document.body.appendChild(codeBar);
+}
+
+let codeAttempts = 0;
+
+function validateEmail(email) {
+  return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+}
+
+function getCSRFToken() {
+  const cookies = document.cookie.split(';');
+  for (let cookie of cookies) {
+    const [name, value] = cookie.trim().split('=');
+    if (name === 'csrftoken') return value;
+  }
+  return '';
+}
+
+forgotBtn.onclick = function() {
+  modal.style.display = 'flex';
+  step1.style.display = 'block';
+  step2.style.display = 'none';
+  step3.style.display = 'none';
+  codeError.style.display = 'none';
+  pwError.style.display = 'none';
+  pwSuccess.style.display = 'none';
+  fpUserError.style.display = 'none';
+  codeBar.style.display = 'none';
+  document.getElementById('fp-username').focus();
+  document.body.style.overflow = 'hidden';
+}
+closeModal.onclick = function() {
+  modal.style.display = 'none';
+  codeBar.style.display = 'none';
+  document.body.style.overflow = '';
+}
+closeModal.onkeydown = function(e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    closeModal.click();
+  }
+}
+generateCodeBtn.onclick = function() {
+  const userVal = document.getElementById('fp-username').value.trim();
+  if (!userVal || (userVal.includes('@') && !validateEmail(userVal))) {
+    fpUserError.style.display = 'block';
+    return;
+  }
+  fpUserError.style.display = 'none';
+  genCodeText.style.display = 'none';
+  genCodeLoading.style.display = 'inline-block';
+  fetch('/ajax/forgot-password/generate/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': getCSRFToken(),
+    },
+    body: 'username=' + encodeURIComponent(userVal)
+  })
+  .then(res => res.json())
+  .then(data => {
+    genCodeText.style.display = 'inline-block';
+    genCodeLoading.style.display = 'none';
+    if (data.success) {
+      step1.style.display = 'none';
+      step2.style.display = 'block';
+      codeAttempts = 0;
+      document.getElementById('fp-code').value = '';
+      document.getElementById('fp-code').focus();
+      // Show code bar for development
+      codeBar.textContent = 'Your verification code: ' + data.code;
+      codeBar.style.display = 'block';
+      setTimeout(function() { codeBar.style.display = 'none'; }, 12000);
+    } else {
+      fpUserError.textContent = data.error || 'User not found.';
+      fpUserError.style.display = 'block';
+      codeBar.style.display = 'none';
+    }
+  })
+  .catch(() => {
+    genCodeText.style.display = 'inline-block';
+    genCodeLoading.style.display = 'none';
+    fpUserError.textContent = 'Network error.';
+    fpUserError.style.display = 'block';
+    codeBar.style.display = 'none';
+  });
+}
+verifyCodeBtn.onclick = function() {
+  const userCode = document.getElementById('fp-code').value.trim();
+  verifyCodeText.style.display = 'none';
+  verifyCodeLoading.style.display = 'inline-block';
+  fetch('/ajax/forgot-password/verify/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': getCSRFToken(),
+    },
+    body: 'code=' + encodeURIComponent(userCode)
+  })
+  .then(res => res.json())
+  .then(data => {
+    verifyCodeText.style.display = 'inline-block';
+    verifyCodeLoading.style.display = 'none';
+    if (data.success) {
+      step2.style.display = 'none';
+      step3.style.display = 'block';
+      codeError.style.display = 'none';
+      document.getElementById('fp-new-password').focus();
+    } else {
+      codeAttempts++;
+      codeError.textContent = data.error || 'Incorrect code.';
+      codeError.style.display = 'block';
+      if (codeAttempts >= 3) {
+        codeError.textContent = 'Too many failed attempts. Please try again.';
+        setTimeout(function() {
+          modal.style.display = 'none';
+          document.body.style.overflow = '';
+        }, 1800);
+      }
+    }
+  })
+  .catch(() => {
+    verifyCodeText.style.display = 'inline-block';
+    verifyCodeLoading.style.display = 'none';
+    codeError.textContent = 'Network error.';
+    codeError.style.display = 'block';
+  });
+}
+resetPasswordBtn.onclick = function() {
+  const pw1 = document.getElementById('fp-new-password').value;
+  const pw2 = document.getElementById('fp-confirm-password').value;
+  resetPwText.style.display = 'none';
+  resetPwLoading.style.display = 'inline-block';
+  if (!pw1 || pw1 !== pw2 || pw1.length < 6) {
+    pwError.style.display = 'block';
+    pwSuccess.style.display = 'none';
+    resetPwText.style.display = 'inline-block';
+    resetPwLoading.style.display = 'none';
+    return;
+  }
+  fetch('/ajax/forgot-password/reset/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': getCSRFToken(),
+    },
+    body: 'password=' + encodeURIComponent(pw1)
+  })
+  .then(res => res.json())
+  .then(data => {
+    resetPwText.style.display = 'inline-block';
+    resetPwLoading.style.display = 'none';
+    if (data.success) {
+      pwError.style.display = 'none';
+      pwSuccess.style.display = 'block';
+      setTimeout(function() {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }, 1500);
+    } else {
+      pwError.textContent = data.error || 'Error resetting password.';
+      pwError.style.display = 'block';
+      pwSuccess.style.display = 'none';
+    }
+  })
+  .catch(() => {
+    resetPwText.style.display = 'inline-block';
+    resetPwLoading.style.display = 'none';
+    pwError.textContent = 'Network error.';
+    pwError.style.display = 'block';
+    pwSuccess.style.display = 'none';
+  });
+}
+window.onclick = function(event) {
+  if (event.target === modal) {
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+}
+</script>
+<style>
+body {
+  background: #eaf3fa;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.container-auth {
+  min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eaf3fa;
+}
+.auth-card {
+  width: 100vw;
+  max-width: 900px;
+  min-height: 80vh;
+  background: transparent;
+  border-radius: 28px;
+  box-shadow: 0 8px 40px rgba(78,154,241,0.13);
+  display: flex;
+  overflow: hidden;
+}
+.auth-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.5s cubic-bezier(.77,0,.18,1), transform 0.7s cubic-bezier(.77,0,.18,1);
+}
+.slide-left {
+transform: translateX(-100vw) scale(0.96);
+opacity: 0.5;
+}
+.slide-right {
+transform: translateX(100vw) scale(0.96);
+opacity: 0.5;
+}
+.auth-panel-left {
+  background: #7c5cff;
+  color: #fff;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 38px;
+  position: relative;
+  border-radius: 60px 180px 180px 60px;
+  box-shadow: 0 8px 40px rgba(78,154,241,0.13);
+  z-index: 2;
+}
+.auth-panel-left .yeti-anim {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.yeti-img-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+}
+.yeti-face-img {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: #eaf3fa;
+  border: 3px solid #bfc9d9;
+}
+.auth-panel-left .panel-content.panel-alt {
+  text-align: center;
+  margin: 0 auto;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+.auth-panel-left .panel-content.panel-alt h2 {
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+.auth-panel-left .panel-content.panel-alt p {
+  color: #eae6ff;
+  font-size: 1.08rem;
+  margin-bottom: 24px;
+}
+.auth-panel-left .panel-btn {
+  background: #fff;
+  color: #7c5cff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 0;
+  font-size: 1.12rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 60%;
+  margin: 0 auto;
+  box-shadow: 0 2px 10px rgba(124,92,255,0.10);
+  transition: background 0.2s, color 0.2s;
+}
+.auth-panel-left .panel-btn:hover {
+  background: #7c5cff;
+  color: #fff;
+}
+.auth-panel-right {
+  background: #fff;
+  color: #222;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 38px;
+  position: relative;
+  border-radius: 28px 0 0 28px;
+  z-index: 2;
+}
+.auth-panel-right .panel-content {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: left;
+}
+.auth-panel-right .panel-content h2 {
+  color: #222;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+.input-group input {
+  width: 100%;
+  padding: 13px 16px 13px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #bfc9d9;
+  font-size: 1.12rem;
+  background: #f4f8fb;
+  transition: border 0.2s;
+}
+.input-group input:focus {
+  border: 1.5px solid #7c5cff;
+  outline: none;
+}
+.input-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7c5cff;
+  font-size: 1.25rem;
+}
+.forgot-link {
+  color: #7c5cff;
+  text-decoration: none;
+  font-size: 1.01rem;
+  font-weight: 500;
+}
+.forgot-link:hover {
+  text-decoration: underline;
+}
+.btn-primary {
+  background: #7c5cff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 0;
+  font-size: 1.12rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 12px;
+  box-shadow: 0 2px 10px rgba(124,92,255,0.10);
+  transition: background 0.2s;
+}
+.btn-primary:hover {
+  background: #4f8cff;
+}
+.social-row {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+.social-btns {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+.social-btn {
+  background: #f4f8fb;
+  color: #7c5cff;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(124,92,255,0.10);
+  transition: background 0.2s, color 0.2s;
+}
+.social-btn:hover {
+  background: #7c5cff;
+  color: #fff;
+}
+@media (max-width: 900px) {
+  .auth-card {
+    width: 100vw;
+    min-height: 100vh;
+    flex-direction: column;
+    border-radius: 0;
+  }
+  .auth-panel { padding: 18px 6px; }
+  .panel-content { max-width: 98vw; }
+}
+@media (max-width: 600px) {
+  .auth-card { width: 100vw; min-height: 100vh; border-radius: 0; }
+  .panel-content h2 { font-size: 1.5rem; }
+}
+/* Forgot Password Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(44,62,80,0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal-content {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(78,154,241,0.18);
+  padding: 32px 28px;
+  max-width: 350px;
+  width: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: fadeIn 0.3s;
+}
+.close-modal {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 1.5rem;
+  color: #7c5cff;
+  cursor: pointer;
+  outline: none;
+}
+.close-modal:focus {
+  box-shadow: 0 0 0 2px #7c5cff33;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+/* Forgot Password Modal Input Styles */
+.fp-input {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1.5px solid #bfc9d9;
+  font-size: 1.08rem;
+  background: #f4f8fb;
+  color: #222;
+  transition: border 0.2s;
+  box-sizing: border-box;
+}
+.fp-input:focus {
+  border: 1.5px solid #7c5cff;
+  outline: none;
+  background: #fff;
+}
+.fp-code-input {
+  letter-spacing: 8px;
+  text-align: center;
+  font-size: 1.3rem;
+}
+</style>
+{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}

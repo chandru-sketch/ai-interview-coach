@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Leaderboard</title>
+  <style>
+    body {
+      background: #121212;
+      color: #e0e0e0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    table {
+      width: 100%;
+      text-align: center;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    tr {
+      background: #1f1f1f;
+    }
+
+    tr:nth-child(even) {
+      background: #2a2a2a;
+    }
+
+    th {
+      background: #00ffe7;
+      color: #121212;
+      padding: 10px;
+    }
+
+    td {
+      padding: 10px;
+    }
+
+    /* 🔥 Streak animation */
+    td:nth-child(4) {
+      color: orange;
+      font-weight: bold;
+      animation: flicker 1.5s infinite alternate;
+    }
+
+    @keyframes flicker {
+      from { text-shadow: 0 0 5px orange; }
+      to { text-shadow: 0 0 20px red; }
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-container">
+    <h2>🏆 Leaderboard</h2>
+    <table>
+      <tr>
+        <th>User</th>
+        <th>Last Score</th>
+        <th>Total Points</th>
+        <th>Streak 🔥</th>
+      </tr>
+      {% for entry in scores %}
+      <tr>
+        <td>{{ entry.user.username }}</td>
+        <td>{{ entry.score }}/5</td>
+        <td>{{ entry.total_points }}</td>
+        <td>{{ entry.streak }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</body>
+</html>

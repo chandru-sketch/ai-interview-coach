@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Daily Mission Locked - AI Interview Coach</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: #f7f7f7;
+      color: #333;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      align-items: flex-start;
+    }
+
+    .quiz-container {
+      background: #fff;
+      padding: 40px 50px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      max-width: 650px;
+      width: 100%;
+      margin: 50px 20px;
+      position: relative;
+      animation: fadeIn 0.8s ease-in-out;
+      text-align: center;
+    }
+
+    .home-icon {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      color: #00b894;
+      cursor: pointer;
+      transition: transform 0.2s, color 0.2s;
+      z-index: 1000;
+    }
+    .home-icon:hover {
+      transform: scale(1.2);
+      color: #00d3a6;
+    }
+
+    h2 {
+      color: #ff4d4d;
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 20px;
+    }
+
+    #timer {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #00b894;
+      background: #fff;
+      display: inline-block;
+      padding: 12px 25px;
+      border-radius: 12px;
+      /* Removed box-shadow and animation for no glow */
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Home Icon -->
+  <a href="{% url 'home' %}" class="home-icon" title="Go to Home">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="28" height="28">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-6 0h6"/>
+    </svg>
+  </a>
+
+  <div class="quiz-container">
+    <h2>You have already completed today’s mission!</h2>
+    <p>Next quiz unlocks in:</p>
+    <div id="timer">00:00:00</div>
+  </div>
+
+  <script>
+    let remaining = Number({{ remaining_seconds|default:0 }});
+    const timerEl = document.getElementById("timer");
+
+    function updateTimer() {
+      let h = Math.floor(remaining / 3600);
+      let m = Math.floor((remaining % 3600) / 60);
+      let s = remaining % 60;
+
+      timerEl.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+      if (remaining > 0) remaining--;
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
+  </script>
+</body>
+</html>

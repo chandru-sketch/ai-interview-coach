@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}AI Interview Coach{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    {% block navbar %}
+    <nav class="navbar">
+        <a href="{% url 'home' %}">Home</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'profile' %}">Profile</a>
+            <a href="{% url 'logout' %}">Logout</a>
+            <a href="{% url 'daily_mission' %}">Daily Mission</a>
+            <a href="{% url 'scoreboard' %}">Leaderboard</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+        <a href="{% url 'faq' %}">FAQ</a>
+        <a href="{% url 'feedback' %}">Feedback</a>
+    </nav>
+    {% endblock %}
+
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    {% block footer %}
+    <footer>
+        &copy; 2025 AI Interview Coach. All rights reserved.
+    </footer>
+    {% endblock %}
+</body>
+</html>

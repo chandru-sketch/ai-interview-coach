@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-auth">
+  <div class="auth-card" id="authCard">
+    <div class="auth-panel auth-panel-left" id="panelLeft">
+      <div class="yeti-anim">
+        <div class="yeti-img-wrap">
+          <img id="yeti-face" src="/static/yeti_open.png" alt="Yeti" class="yeti-face-img">
+          <img id="yeti-face-closed" src="/static/yeti_closed.png" alt="Yeti Closed" class="yeti-face-img" style="display:none;">
+        </div>
+      </div>
+      <div class="panel-content">
+<h2 id="registerTitle" style="color:#7c5cff;">Registration</h2>
+        <form method="post" class="auth-form" id="registerForm">
+          {% csrf_token %}
+          <div class="input-group">
+            <input type="text" name="username" required placeholder="Username" autocomplete="username">
+            <span class="input-icon"><i class="fa fa-user"></i></span>
+          </div>
+          <div class="input-group">
+            <input type="email" name="email" id="email-input" required placeholder="Email" autocomplete="email">
+            <span class="input-icon"><i class="fa fa-envelope"></i></span>
+          </div>
+          <div class="input-group">
+            <input type="password" name="password1" id="password-input" required placeholder="Password" autocomplete="new-password">
+            <span class="input-icon"><i class="fa fa-lock"></i></span>
+          </div>
+          <div class="show-label" style="text-align:left;margin-bottom:10px;">
+            <input type="checkbox" id="show-password"> Show Password
+          </div>
+          <div class="input-group">
+            <input type="password" name="password2" required placeholder="Confirm Password" autocomplete="new-password">
+            <span class="input-icon"><i class="fa fa-lock"></i></span>
+          </div>
+          <button type="submit" class="btn-primary">Register</button>
+        </form>
+      </div>
+    </div>
+    <div class="auth-panel auth-panel-right" id="panelRight">
+      <div class="panel-content panel-alt">
+        <h2 id="welcomeTitle">Welcome Back!</h2>
+        <p id="welcomeText">Already have an account?</p>
+        <button class="panel-btn" id="showLogin">Login</button>
+      </div>
+    </div>
+  </div>
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="/static/yeti_login_anim.js"></script>
+<script>
+const showLogin = document.getElementById('showLogin');
+const panelLeft = document.getElementById('panelLeft');
+const panelRight = document.getElementById('panelRight');
+const registerTitle = document.getElementById('registerTitle');
+const welcomeTitle = document.getElementById('welcomeTitle');
+const welcomeText = document.getElementById('welcomeText');
+
+showLogin.addEventListener('click', function() {
+  // Animate to login panel (smooth transition)
+  panelLeft.classList.add('slide-left');
+  panelRight.classList.add('slide-right');
+  registerTitle.textContent = 'Login';
+  welcomeTitle.textContent = 'Hello, Welcome!';
+  welcomeText.textContent = "Don't have an account?";
+  setTimeout(function() { window.location.href = '/login'; }, 700);
+});
+document.getElementById('show-password').addEventListener('change', function() {
+  const pw1 = document.getElementById('password-input');
+  const pw2 = document.querySelector('input[name="password2"]');
+  const type = this.checked ? 'text' : 'password';
+  if (pw1) pw1.type = type;
+  if (pw2) pw2.type = type;
+});
+</script>
+<style>
+body {
+  background: #eaf3fa;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.container-auth {
+  min-height: 100vh;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eaf3fa;
+}
+.auth-card {
+  width: 100vw;
+  max-width: 900px;
+  min-height: 80vh;
+  background: transparent;
+  border-radius: 28px;
+  box-shadow: 0 8px 40px rgba(78,154,241,0.13);
+  display: flex;
+  overflow: hidden;
+}
+.auth-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.5s cubic-bezier(.77,0,.18,1), transform 0.7s cubic-bezier(.77,0,.18,1);
+}
+.slide-left {
+transform: translateX(-100vw) scale(0.96);
+opacity: 0.5;
+}
+.slide-right {
+transform: translateX(100vw) scale(0.96);
+opacity: 0.5;
+}
+.auth-panel-left {
+  background: #f9f9ff;
+  color: #222;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 38px;
+  position: relative;
+  border-radius: 28px 0 0 28px;
+  z-index: 2;
+}
+.auth-panel-left .panel-content h2 {
+  color: #222;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+.auth-panel-left .panel-content p {
+  color: #888;
+}
+.auth-panel-left .input-group input {
+  background: #fff;
+  border: 1.5px solid #e0e6f7;
+  color: #222;
+  font-size: 1.08rem;
+  border-radius: 8px;
+  box-shadow: none;
+}
+.auth-panel-left .input-group input:focus {
+  border: 1.5px solid #7c5cff;
+  outline: none;
+}
+.auth-panel-left .input-icon {
+  color: #7c5cff;
+}
+.auth-panel-left .btn-primary {
+  background: #7c5cff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 0;
+  font-size: 1.12rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 12px;
+  box-shadow: 0 2px 10px rgba(124,92,255,0.10);
+  transition: background 0.2s;
+}
+.auth-panel-left .btn-primary:hover {
+  background: #4f8cff;
+}
+.auth-panel-right {
+  background: #7c5cff;
+  color: #fff;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 0 38px;
+  position: relative;
+  border-radius: 120px 28px 28px 120px;
+  box-shadow: 0 8px 40px rgba(78,154,241,0.13);
+  z-index: 2;
+}
+.auth-panel-right .panel-content.panel-alt {
+  text-align: center;
+  margin: 0 auto;
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+.auth-panel-right .panel-content.panel-alt h2 {
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+.auth-panel-right .panel-content.panel-alt p {
+  color: #eae6ff;
+  font-size: 1.08rem;
+  margin-bottom: 24px;
+}
+.auth-panel-right .panel-btn {
+  background: #fff;
+  color: #7c5cff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 0;
+  font-size: 1.12rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 60%;
+  margin: 0 auto;
+  box-shadow: 0 2px 10px rgba(124,92,255,0.10);
+  transition: background 0.2s, color 0.2s;
+}
+.auth-panel-right .panel-btn:hover {
+  background: #7c5cff;
+  color: #fff;
+}
+.yeti-anim {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+.yeti-img-wrap {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+}
+.yeti-face-img {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: #eaf3fa;
+  border: 3px solid #bfc9d9;
+}
+.panel-content {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  text-align: center;
+}
+.panel-content h2 {
+  font-size: 2.1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+  color: #2d2d2d;
+}
+.auth-panel-left .panel-content h2 {
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+.panel-content p {
+  font-size: 1.12rem;
+  margin-bottom: 20px;
+  color: #bfc9d9;
+}
+.auth-panel-left .panel-content p {
+  color: #eae6ff;
+}
+.panel-btn {
+  background: #f3f8fd;
+  color: #7c5cff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 0;
+  font-size: 1.12rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 80%;
+  margin-top: 12px;
+  box-shadow: 0 2px 10px rgba(124,92,255,0.10);
+  transition: background 0.2s, color 0.2s;
+}
+.panel-btn:hover {
+  background: #7c5cff;
+  color: #fff;
+}
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+.input-group input {
+  width: 100%;
+  padding: 13px 42px 13px 13px;
+  border-radius: 8px;
+  border: 1.5px solid #bfc9d9;
+  font-size: 1.12rem;
+  background: #f4f8fb;
+  transition: border 0.2s;
+}
+.input-group input:focus {
+  border: 1.5px solid #7c5cff;
+  outline: none;
+}
+.input-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7c5cff;
+  font-size: 1.25rem;
+}
+.btn-primary {
+  background: #7c5cff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px 0;
+  font-size: 1.12rem;
+  font-weight: 600;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 12px;
+  box-shadow: 0 2px 10px rgba(124,92,255,0.10);
+  transition: background 0.2s;
+}
+.btn-primary:hover {
+  background: #4f8cff;
+}
+.social-row {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 1.05rem;
+}
+.social-btn {
+  background: #f4f8fb;
+  color: #7c5cff;
+  border: none;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  margin: 10px 8px 0 8px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(124,92,255,0.10);
+  transition: background 0.2s, color 0.2s;
+}
+.social-btn:hover {
+  background: #7c5cff;
+  color: #fff;
+}
+@media (max-width: 900px) {
+  .auth-card {
+    width: 100vw;
+    min-height: 100vh;
+    flex-direction: column;
+    border-radius: 0;
+  }
+  .auth-panel { padding: 18px 6px; }
+  .panel-content { max-width: 98vw; }
+}
+@media (max-width: 600px) {
+  .auth-card { width: 100vw; min-height: 100vh; border-radius: 0; }
+  .yeti-img-wrap, .yeti-face-img { width: 100px; height: 100px; }
+  .panel-content h2 { font-size: 1.5rem; }
+}
+</style>
+{% endblock %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+

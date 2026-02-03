@@ -1,0 +1,302 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile - AI Interview Coach</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #121212;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .navbar {
+      background: #1f1f1f;
+      border-bottom: 1px solid #333;
+    }
+    .navbar .navbar-brand span {
+      color: #00aaff !important;
+    }
+
+    /* Profile Banner */
+    .profile-header {
+      position: relative;
+      height: 280px;
+      overflow: hidden;
+    }
+    .profile-header img.banner {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.7);
+    }
+
+    /* Avatar */
+    .profile-avatar {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 5px solid #fff;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .profile-avatar:hover {
+      transform: scale(1.08);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+    }
+
+    /* Info overlay */
+    .profile-overlay {
+      position: absolute;
+      bottom: 20px;
+      left: 40px;
+      display: flex;
+      align-items: flex-end;
+      color: #fff;
+    }
+    .profile-info {
+      margin-left: 20px;
+    }
+    .profile-info h3 {
+      font-weight: 700;
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+    }
+    .profile-info p {
+      margin: 0;
+      font-size: 1.1rem;
+      color: #ddd;
+    }
+    .social-links a {
+      margin: 0 8px;
+      color: #bbb;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    .social-links a:hover {
+      color: #00aaff;
+    }
+
+    /* Card for form */
+    .profile-card {
+      background: #1f1f1f;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+      padding: 30px;
+      margin-top: 40px;
+    }
+    .form-label {
+      font-weight: 600;
+      color: #ddd;
+    }
+    .form-control {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #fff;
+      transition: all 0.3s ease-in-out;
+    }
+    .form-control:focus {
+      border-color: #00aaff;
+      background: #333;
+      box-shadow: 0 0 8px #00aaff80;
+    }
+
+    /* Animations for form fields */
+    .animate-field {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.6s ease-out;
+    }
+    .animate-field.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Drag & Drop Upload */
+    .drop-zone {
+      border: 2px dashed #00aaff;
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      cursor: pointer;
+      color: #bbb;
+      background: #2a2a2a;
+      transition: all 0.3s ease;
+    }
+    .drop-zone.dragover {
+      background: #1e3a50;
+      border-color: #0099ff;
+      color: #fff;
+    }
+    .drop-zone input {
+      display: none;
+    }
+
+    /* Buttons */
+    .btn-primary {
+      background: #00aaff;
+      border: none;
+      font-weight: 600;
+      padding: 10px 22px;
+      border-radius: 8px;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+    .btn-primary:hover {
+      background: #007acc;
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar px-4 py-2">
+  <div class="container-fluid d-flex justify-content-between align-items-center">
+    <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+      <img src="{% static 'logo.png' %}" alt="Logo" width="60" height="60" class="me-2">
+      <span class="fw-bold fs-5">AI Interview Coach</span>
+    </a>
+    {% if user.is_staff %}
+      <a href="/admin/" class="btn btn-dark btn-sm px-3">Admin</a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- Profile Banner -->
+<div class="profile-header">
+  <img src="{% static 'images/default--banner.jpg' %}" alt="Banner" class="banner">
+
+  <div class="profile-overlay">
+    <!-- Avatar -->
+    <label for="avatar-input">
+      {% if user_profile.avatar %}
+        <img src="{{ user_profile.avatar.url }}" class="profile-avatar" alt="Avatar">
+      {% else %}
+        <img src="{% static 'images/default-avatar.png' %}" class="profile-avatar" alt="Avatar">
+      {% endif %}
+    </label>
+    <input type="file" id="avatar-input" name="avatar" class="d-none" accept="image/*" form="profile-form">
+
+    <div class="profile-info">
+      <h3>{{ user.get_full_name|default:user.username }}</h3>
+      <p>{{ user.email }}</p>
+    </div>
+  </div>
+</div>
+
+<!-- Profile Edit Form -->
+<div class="container">
+  <div class="profile-card col-lg-10 mx-auto">
+    <form id="profile-form" method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Phone -->
+      <div class="mb-3 animate-field">
+        <label class="form-label">Phone</label>
+        <input type="text" name="phone" class="form-control" value="{{ user_profile.phone }}">
+      </div>
+
+      <!-- Bio -->
+      <div class="mb-3 animate-field">
+        <label class="form-label">Bio</label>
+        <textarea name="bio" class="form-control" rows="3">{{ user_profile.bio }}</textarea>
+      </div>
+
+      <!-- Skills -->
+      <div class="mb-3 animate-field">
+        <label class="form-label">Skills</label>
+        <textarea name="skills" class="form-control" rows="2">{{ user_profile.skills }}</textarea>
+      </div>
+
+      <!-- Resume -->
+      <div class="mb-3 animate-field">
+        <label class="form-label">Resume</label>
+        {% if user_resume %}
+          <p class="mb-2">Last uploaded: 
+            <a href="{{ user_resume.file.url }}" target="_blank" class="text-decoration-none text-info">
+              {{ user_resume.file.name }}
+            </a>
+          </p>
+        {% endif %}
+        <div class="drop-zone" id="drop-zone">
+          <span id="drop-text">Drag & drop your resume here or click to upload</span>
+          <input type="file" name="resume" id="resume-input" accept=".pdf,.doc,.docx">
+        </div>
+      </div>
+
+      <!-- Button -->
+      <div class="text-end animate-field">
+        <button type="submit" class="btn btn-primary">Update Profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Bootstrap icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<!-- JS -->
+<script>
+  // Animate fields on load
+  document.addEventListener("DOMContentLoaded", () => {
+    const fields = document.querySelectorAll(".animate-field");
+    fields.forEach((field, index) => {
+      setTimeout(() => {
+        field.classList.add("visible");
+      }, index * 200); // stagger animation
+    });
+  });
+
+  // Drag & Drop Resume Upload
+  const dropZone = document.getElementById('drop-zone');
+  const resumeInput = document.getElementById('resume-input');
+  const dropText = document.getElementById('drop-text');
+
+  dropZone.addEventListener('click', () => resumeInput.click());
+
+  resumeInput.addEventListener('change', () => {
+    if (resumeInput.files.length) {
+      dropText.textContent = resumeInput.files[0].name;
+    }
+  });
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+
+  dropZone.addEventListener('dragleave', () => {
+    dropZone.classList.remove('dragover');
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+
+    if (e.dataTransfer.files.length) {
+      resumeInput.files = e.dataTransfer.files;
+      dropText.textContent = e.dataTransfer.files[0].name;
+    }
+  });
+
+  // Avatar live preview
+  const avatarInput = document.getElementById('avatar-input');
+  const avatarImg = document.querySelector('.profile-avatar');
+
+  avatarInput.addEventListener('change', () => {
+    if (avatarInput.files && avatarInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        avatarImg.src = e.target.result;
+      };
+      reader.readAsDataURL(avatarInput.files[0]);
+    }
+  });
+</script>
+
+</body>
+</html>
